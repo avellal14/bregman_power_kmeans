@@ -23,7 +23,8 @@ def kmeans(X, k, centers):
     phi = get_phi(dist_to_phi('gaussian'))
     classes = get_classes(X, centers, phi)
     points, features = X.size()
-    centers = torch.zeros([k, features])
+
+    #centers = torch.zeros([k, features]) #code removed to address center init bug
     members = torch.zeros(k)
 
     switched = True
@@ -34,6 +35,7 @@ def kmeans(X, k, centers):
         start_iter = time.time()
         iters += 1
 
+        centers_old = centers #new code added 12/27 to address bug
         centers = torch.zeros([k, features], dtype=torch.float64)
         members = torch.zeros(k, dtype=torch.float64)
 
@@ -44,8 +46,10 @@ def kmeans(X, k, centers):
             members[i] += 1
 
         for i in range(k):
-            centers[i,:] /= max(members[i], 1)
-
+            if members[i] >= 1:
+                centers[i,:] /= members[i]
+            else:
+                centers[i,:] = centers_old[i,:]
 
         #update all the cluster assignments based on new centers
         switched = False
@@ -64,7 +68,7 @@ def kmeans(X, k, centers):
     return classes, centers, iters, time.time() - start
 
 
-def power_kmeans(X, s, k, centers, y, i):
+def power_kmeans(X, s, k, centers, y):
     start = time.time()
 
     X = X.to(torch.float64)
