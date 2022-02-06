@@ -34,7 +34,7 @@ def power_kmeans_bregman(phi, X, s, k, centers, n_epochs=1, lr=1e-2, iterative=F
         start_iter = time.time()
         iter += 1
 
-        bregman_dist = pairwise_bregman(X, centers, phi, shape)#torch.clamp(phi[0](X)[:, np.newaxis] - phi[0](centers)[np.newaxis, :] - torch.sum((X[:, np.newaxis] - centers[np.newaxis, :]) * phi[1](centers[np.newaxis, :]), axis=-1), min=1e-12, max=1e12)
+        bregman_dist = pairwise_bregman(X, centers, phi, shape)
         weights = torch.t(torch.mul(torch.t(torch.pow(bregman_dist, (s-1))), torch.pow(torch.sum(torch.pow(bregman_dist, s), axis=1), (1/s - 1)) + epsilon)) # n x k
 
         if torch.min(weights) < torch.tensor([1e-280], dtype=torch.float64):
@@ -79,7 +79,6 @@ def power_kmeans_bregman(phi, X, s, k, centers, n_epochs=1, lr=1e-2, iterative=F
             break
 
     #assign cluster labels
-    #centers = torch.Tensor(np.sort(centers, axis=0)) #TODO: new line
     bregman_dist = pairwise_bregman(X, centers, phi, shape) #n x k distance matrix
     classes = torch.argmin(bregman_dist, axis=1)
 
