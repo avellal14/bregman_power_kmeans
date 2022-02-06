@@ -54,12 +54,9 @@ def generate_points(random_state, **kwargs):
 
 
 def random_sample(dist_name, center, desired_variance, n, d, shape=None):
-    # print("center: ", center, "desired variance: ", desired_variance, "n: ", n)
     dist_dict = {
         'gaussian': lambda center: np.random.normal(loc=center, scale=sqrt(desired_variance), size=(n,d)),
-        #'multinomial': lambda center: np.random.binomial(n=10, p=0.5, size=(n,d)) + (center-5), #center the distribution at the d-dimensional center
-        'multinomial': lambda center: np.random.binomial(n=50, p=center[0]/50, size=(n,d)), #hacky hardcoding for robust bregman experiment
-        #'multinomial': lambda center: np.random.binomial(n=(center**2/(center - desired_variance)).astype(np.int64), p=1-desired_variance/center, size=(n,d)), #using binomial for simplicity right now
+        'multinomial': lambda center: np.random.binomial(n=50, p=center[0]/50, size=(n,d)), 
         'exponential': lambda center: np.random.exponential(scale=center, size=(n,d)),
         'poisson': lambda center: np.random.poisson(lam=center, size=(n,d)),
         'gamma': lambda center, shape: np.random.gamma(shape=shape, scale=center/shape, size=(n,d))
@@ -120,7 +117,6 @@ inputs: X (n rows of m-dimensional points),
 output: centers (k rows of m-dimensional points)
 '''
 def initcenters(X, k, random_state, phi=None):
-    #all hardcoded for now, will need to fix
     np.random.seed(random_state)
     return torch.tensor(np.random.randint(low=torch.min(X), high=torch.max(X), size=(k,X.shape[1])))
 
@@ -188,13 +184,9 @@ def get_phi(name):
     phi_dict = {
         'euclidean': [lambda theta: torch.sum(theta**2, axis=1), lambda theta: 2*theta, lambda theta: 2*torch.eye(theta.size()[1], dtype=torch.float64)],
         'kl_div': [lambda theta: torch.sum(theta * torch.log(theta), axis=1), lambda theta: torch.log(theta) + 1, lambda theta: torch.eye(theta.size()[1], dtype=torch.float64) * 1/theta],
-        #'itakura_saito': [lambda theta: torch.sum(torch.log(theta), axis=1), lambda theta: 1/theta, lambda theta: torch.eye(-theta.size()[1]) / (theta**2)],
         'itakura_saito': [lambda theta: torch.sum(-torch.log(theta) - 1, axis=1), lambda theta: -1/theta, lambda theta: torch.eye(theta.size()[1]) / (theta**2)],
         'relative_entropy': [lambda theta: torch.sum(theta * torch.log(theta) - theta, axis=1), lambda theta: torch.log(theta), lambda theta: torch.eye(theta.size()[1]) / theta],
         'gamma': [lambda theta, k: torch.sum(-k + k * torch.log(k/theta), axis=1), lambda theta, k: -k/theta, lambda theta, k: k * torch.eye(theta.size()[1]) / (theta**2)]
-        #'mahalanobis': torch.mul(torch.t(theta), torch.mul(A, theta)),
-        #TODO: 'itakura_saito': lambda theta: [-torch.log(theta), -1/theta, 1/(theta**2)], #for 1D theta only
-        #TODO: 'relative_entropy': lambda theta: [theta * torch.log(theta)-theta, torch.log(theta), 1/theta] #for 1D theta only
     }
     return phi_dict[name]
 
@@ -223,27 +215,12 @@ def pairwise_bregman(X, Y, phi_list, shape=None):
     X = X[:, np.newaxis]
     Y = Y[np.newaxis, :]
 
-    #print("tough scene")
-    #print(torch.min(phi_X), torch.max(phi_X))
-    #print(torch.min(phi_Y), torch.max(phi_Y))
-    #a = torch.sum((X - Y) * gradient(Y), axis=-1)
-    #print(torch.min(a), torch.max(a))
 
     if shape:
         pairwise_distances = phi_X - phi_Y - torch.sum((X - Y) * gradient(Y, shape), axis=-1)
     else:
         pairwise_distances = phi_X - phi_Y - torch.sum((X - Y) * gradient(Y), axis=-1)
-    #print("check check: ", torch.min(pairwise_distances), torch.max(pairwise_distances))
-    #pairwise_matrix = torch.clamp(pairwise_matrix, min=1e-100)
 
-    #print(np.where(pairwise_matrix == torch.min(pairwise_matrix)), torch.min(pairwise_matrix), torch.max(pairwise_matrix))
-    #print(pairwise_matrix.shape)
-
-    #if pairwise_matrix.shape[1] > 1:
-        #print("kek: ", phi_X.shape, phi_Y.shape, pairwise_matrix.shape)
-    #    print("weird entry: ", X[56,:], Y[:,19], pairwise_matrix[56, 19])
-
-    #print("bricked")
     return torch.clamp(pairwise_distances, min=1e-12, max=1e6)
 
 
@@ -320,8 +297,6 @@ def VI(k1, a1, k2, a2):
 
             if r > 0.0:
                 sigma += r * (log(r / p, 2) + log(r / q, 2))
-
-    #print("o: ", cluster_match)
     return abs(sigma)
 
 
@@ -380,7 +355,7 @@ def visualize_lineplot(vals, times, line_names=None, x_axis_name=None, y_axis_na
             path_dir = path[:-((path[::-1]).find('/'))]
             if not os.path.exists(path_dir): os.makedirs(path_dir)
 
-            full_path = path[:-4] +'_LinePlot.png' #chop off that '.png'
+            full_path = path[:-4] +'_LinePlot.png' 
             plt.savefig(full_path, dpi=dpi, facecolor='w', edgecolor='w', orientation='portrait', papertype=None,
                 format=None, transparent=False, bbox_inches=None, pad_inches=0.1, frameon=None, metadata=None)
             full_save_path_list.append(full_path)
