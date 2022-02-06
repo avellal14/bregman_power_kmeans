@@ -150,7 +150,6 @@ def run_experiment(init_params, exp_dir):
     ARIs_bregman = np.array(ARIs_bregman)
     NMIs_bregman = np.array(NMIs_bregman)
 
-    #print("nice: ", VIs_bregman)
     sqrt_n = np.sqrt(init_params['n_trials'])
 
     with open(exp_file, 'w', newline='') as csv_file:
