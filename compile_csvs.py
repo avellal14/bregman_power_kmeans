@@ -5,8 +5,7 @@ import numpy as np
 
 def compile_csvs(csv_dir):
     csv_list = os.listdir(csv_dir)
-    csv_list = [nm for nm in csv_list if 'lock' not in nm and 'summary' not in nm] #weird file showing up for some reason that needs to be removed
-    
+
     line_list = []
     for csv_nm in sorted(csv_list):
         test_dict = eval(csv_nm[:-4])
