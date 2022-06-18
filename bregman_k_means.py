@@ -67,13 +67,7 @@ def power_kmeans_bregman(phi, X, s, k, centers, n_epochs=1, lr=1e-2, iterative=F
         else:
             convergence_cnt = 0
 
-
-        #plot objective func
-        # if iter % 1000 == 0:
-        #     obj_list = np.append(obj_list, VI(len(centers), y, len(centers), classes))
-        #     iter_list = np.append(iter_list, iter)
-        #     visualize_lineplot(obj_list, iter_list, line_names=['objective'], save_path_list=['/home/adi/Duke/Clustering_Research/visualizations_91/VI_bregman_' + str(s_0) + '_' + str(i) + '_' + str(convergence_threshold) + '_' + str(X.shape[1]) + '.png'])
-
+            
         if convergence_cnt == convergence_threshold:
             #print("point assignments have converged")
             break
