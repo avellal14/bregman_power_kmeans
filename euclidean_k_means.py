@@ -24,7 +24,6 @@ def kmeans(X, k, centers):
     classes = get_classes(X, centers, phi)
     points, features = X.size()
 
-    #centers = torch.zeros([k, features]) #code removed to address center init bug
     members = torch.zeros(k)
 
     switched = True
@@ -63,8 +62,7 @@ def kmeans(X, k, centers):
             if classes[p] != j:
                 classes[p] = j
                 switched = True
-
-    #print("k-means done. num iters: ", iters)
+                
     return classes, centers, iters, time.time() - start
 
 
@@ -116,8 +114,6 @@ def power_kmeans(X, s, k, centers, y):
                 s += -.2
             elif s > -120.0:
                 s *= 1.06
-            #print("new s: ", s)
-
 
         if classes is not None:
             classes_old = classes
@@ -142,9 +138,9 @@ def power_kmeans(X, s, k, centers, y):
 
 def kmeans_obj(centers, X):
     euclidean_dist = pairwise_distances(X, centers) #n x k distance matrix
-    return torch.sum(torch.min(euclidean_dist, axis=1)) #sum over n costs (1 for each pt)
+    return torch.sum(torch.min(euclidean_dist, axis=1)) #sum over n data points (1 for each pt)
 
 
 def kgen_obj(centers, X, s):
     euclidean_dist = pairwise_distances(X, centers) #n x k distance matrix
-    return torch.sum(powmean(torch.pow(euclidean_dist, 2), s)) #sum over n costs (1 for each pt)
+    return torch.sum(powmean(torch.pow(euclidean_dist, 2), s)) #sum over n datapoints (1 for each pt)
