@@ -34,7 +34,7 @@ def kmeans(X, k, centers):
         start_iter = time.time()
         iters += 1
 
-        centers_old = centers #new code added 12/27 to address bug
+        centers_old = centers 
         centers = torch.zeros([k, features], dtype=torch.float64)
         members = torch.zeros(k, dtype=torch.float64)
 
