@@ -7,7 +7,6 @@ def compile_csvs(csv_dir):
     csv_list = os.listdir(csv_dir)
     csv_list = [nm for nm in csv_list if 'lock' not in nm and 'summary' not in nm] #weird file showing up for some reason that needs to be removed
     
-
     line_list = []
     for csv_nm in sorted(csv_list):
         test_dict = eval(csv_nm[:-4])
@@ -25,7 +24,6 @@ def compile_csvs(csv_dir):
         se_VI_bregman = csv_df['SE VI Bregman Power K-Means Iterative'][0]
         
         line_list += [[s_0, d, round(mean_VI_og,3), round(mean_VI_power, 3), round(mean_VI_bregman,3)]]
-        #line_list += [[s_0, d, round(mean_VI_og,3), round(se_VI_og,3), round(mean_VI_power, 3), round(se_VI_power, 3), round(mean_VI_bregman,3), round(se_VI_bregman,3)]]
 
     summary_csv = os.path.join(csv_dir, 'summary.csv') 
     with open(summary_csv, 'w', newline='') as csv_file:
@@ -34,5 +32,4 @@ def compile_csvs(csv_dir):
             writer.writerow(line)
 
 if __name__ == "__main__":
-    compile_csvs(csv_dir=os.path.join('/home', 'adi', 'Duke', 'Clustering_Research', 'experiments', '4_29_2500_mean/'))
-    #compile_csvs(csv_dir=os.path.join('/home', 'adi', 'hdd2', 'clustering_research', 'experiments', '3_5/'))
+    compile_csvs(csv_dir='experiment_dir'))
