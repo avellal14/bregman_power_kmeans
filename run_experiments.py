@@ -84,7 +84,7 @@ def run_experiment(init_params, exp_dir):
     start_trial = time.time()
     while cnt < init_params['n_trials']:
         X, classes_true, centers_true = data_func(i)
-        X = torch.tensor(X) #weird cast, clean up if possible
+        X = torch.tensor(X)
         X = X.to(torch.float64)
 
         centers_init = initcenters(X, k, random_state=i) #want to keep consistent center initialization
@@ -92,8 +92,6 @@ def run_experiment(init_params, exp_dir):
         #lloyd's, power k-means, bregman iterative, bregman closed form
         classes_og, centers_og, iter_og, time_og = kmeans(X, k, centers_init)
         classes_power, centers_power, s_final_power, iter_power, time_power = power_kmeans(X, init_params['s_0'], k, centers_init, classes_true)
-        #classes_bregman_iterative, centers_bregman_iterative, s_final_bregman_iterative, iter_bregman_iterative, time_bregman_iterative = power_kmeans_bregman(phi, X, init_params['s_0'], k, centers_init_bregman, n_epochs=1, lr=0.01, iterative=True)
-
         gamma_shape = init_params['data_params']['shape'] if 'shape' in init_params['data_params'].keys() else None
         failed_to_converge, classes_bregman, centers_bregman, s_final_bregman, iter_bregman, time_bregman = power_kmeans_bregman(phi, X, init_params['s_0'], k, centers_init, n_epochs=1, lr=0.01, iterative=False, convergence_threshold=init_params['convergence_threshold'], y=classes_true, shape=gamma_shape)
         i += 1
@@ -103,12 +101,10 @@ def run_experiment(init_params, exp_dir):
 
         iters_og += [iter_og]
         iters_power += [iter_power]
-        #iters_bregman_iterative += [iter_bregman_iterative]
         iters_bregman += [iter_bregman]
 
         times_og += [time_og]
         times_power += [time_power]
-        #times_bregman_iterative += [time_bregman_iterative]
         times_bregman += [time_bregman]
 
         VIs_og += [VI(k, classes_true, k, classes_og)]
@@ -125,12 +121,7 @@ def run_experiment(init_params, exp_dir):
 
         cnt += 1
 
-        #print("finished trial ", cnt, ". time elapsed: ", time.time() - start_trial)
-        #print(VIs_power[-1], VIs_bregman[-1])
         start_trial = time.time()
-        # print("og centers: ", centers_og, VIs_og[-1])
-        # print("power centers: ", centers_power, VIs_power[-1])
-        # print("bregman centers: ", centers_bregman, VIs_bregman[-1])
 
     iters_og = np.array(iters_og)
     times_og = np.array(times_og)
@@ -154,79 +145,29 @@ def run_experiment(init_params, exp_dir):
 
     with open(exp_file, 'w', newline='') as csv_file:
         writer = csv.writer(csv_file)
-        # writer.writerow(["Mean Iters K-Means", "SE Iters K-Means", "Mean Time Elapsed K-Means", "SE Time Elapsed K-Means", "Mean VI K-Means", "SE VI K-Means", "Mean Iters Power K-Means", "SE Iters Power K-Means", "Mean Time Elapsed Power K-Means", "SE Time Elapsed Power K-Means", "Mean VI Power K-Means", "SE VI Power K-Means", "Mean Iters Bregman Power K-Means", "SE Iters Bregman Power K-Means", "Mean Time Elapsed Bregman Power K-Means", "SE Time Elapsed Bregman Power K-Means", "Mean VI Bregman Power K-Means", "SE VI Bregman Power K-Means"])
-        # writer.writerow([np.mean(iters_og), np.std(iters_og)/sqrt_n, np.mean(times_og), np.std(times_og)/sqrt_n, np.mean(VIs_og), np.std(VIs_og)/sqrt_n, np.mean(iters_power), np.std(iters_power)/sqrt_n, np.mean(times_power), np.std(times_power)/sqrt_n, np.mean(VIs_power), np.std(VIs_power)/sqrt_n,
-        #                  np.mean(iters_bregman), np.std(iters_bregman)/sqrt_n, np.mean(times_bregman), np.std(times_bregman)/sqrt_n, np.mean(VIs_bregman), np.std(VIs_bregman)/sqrt_n])
         writer.writerow(["Mean VI K-Means", "SE VI K-Means", "Mean ARI K-Means", "SE ARI K-Means", "Mean NMI K-Means", "SE NMI K-Means", "Mean VI Power K-Means", "SE VI Power K-Means", "Mean ARI Power K-Means", "SE ARI Power K-Means", "Mean NMI Power K-Means", "SE NMI Power K-Means", "Mean VI Bregman Power K-Means", "SE VI Bregman Power K-Means", "Mean ARI Bregman Power K-Means", "SE ARI Bregman Power K-Means", "Mean NMI Bregman Power K-Means", "SE NMI Bregman Power K-Means"])
         writer.writerow([np.mean(VIs_og), np.std(VIs_og)/sqrt_n, np.mean(ARIs_og), np.std(ARIs_og)/sqrt_n, np.mean(NMIs_og), np.std(NMIs_og)/sqrt_n, np.mean(VIs_power), np.std(VIs_power)/sqrt_n, np.mean(ARIs_power), np.std(ARIs_power)/sqrt_n, np.mean(NMIs_power), np.std(NMIs_power)/sqrt_n, np.mean(VIs_bregman), np.std(VIs_bregman)/sqrt_n, np.mean(ARIs_bregman), np.std(ARIs_bregman)/sqrt_n, np.mean(NMIs_bregman), np.std(NMIs_bregman)/sqrt_n])
 
     print("Experiment Done. Dimension: ", init_params['data_params']['n_features'], "s_0: ", init_params['s_0'], ", Time Elapsed (sec): ", time.time() - start_exp)
 
-
-#exp_dir='/home/adi/hdd2/clustering_research/experiments/'
-
-def run_experiment_group(init_params, s_0s, exp_dir='/home/adi/Duke/Clustering_Research/experiments/', exp_id=None):
+def run_experiment_group(init_params, s_0s, exp_dir='exp_dir', exp_id=None):
     exp_dir = setup_experiment_group(exp_dir, exp_id)
-
-    # init_params = {
-    #     'n_trials': 50,
-    #     'bregman_dist': 'multinomial',
-    #     'data_params': {
-    #         'n_samples': 2500,
-    #         'n_features': 2,
-    #         'center_box': (25, 125),
-    #         'centers': 25,
-    #         'data_dist': 'multinomial',
-    #         'desired_variance': 0.625,
-    #     },
-    #     's_0': -1.0
-    # }
-
-    # init_params = {
-    #     'n_trials': 50,
-    #     'bregman_dist': 'gaussian',
-    #     'data_params': {
-    #         'n_samples': 2500,
-    #         'n_features': 2,
-    #         'center_box': (25, 125),
-    #         'centers': 25,
-    #         'data_dist': 'gaussian',
-    #         'desired_variance': 1.0,
-    #     },
-    #     's_0': -1.0,
-    #     'convergence_threshold': 5
-    # }
-
-    #dims = [2]#[2, 5, 10, 20, 50, 100] #200
-    #convergence_thresholds = [5,10]#[1,2,5,10]
-    # s_0s = [-0.2, -1.0, -3.0, -9.0] #-18.0
-
-
     for s_0 in s_0s:
         init_params['s_0'] = s_0
         print("running experiment, s_0: ", init_params['s_0'])
         run_experiment(init_params, exp_dir)
 
-    # for d in dims:
-    #     init_params['data_params']['n_features'] = d
-    #     init_params['data_params']['desired_variance'] = 0.5*d
-    #
-    #     for s_0 in s_0s:
-    #         init_params['s_0'] = s_0
-    #
-    #         for threshold in convergence_thresholds:
-    #             init_params['convergence_threshold'] = threshold
-    #             run_experiment(init_params, exp_dir)
 
 
 if __name__ == "__main__":
     k = 3
     d = 2
+    
     init_params_gaussian = {
         'n_trials': 250,
         'bregman_dist': 'gaussian',
         'data_params': {
-            'n_samples': 99, #they did 100 in robust bregman clustering, but 99 is divisible by 3
+            'n_samples': 99, 
             'n_features': d,
             'center_box': (1, 40),
             'center_coordinates': np.array([[10]*d, [20]*d, [40]*d]),
@@ -237,12 +178,11 @@ if __name__ == "__main__":
         'convergence_threshold': 5
     }
 
-
     init_params_binomial = {
             'n_trials': 250,
             'bregman_dist': 'multinomial',
             'data_params': {
-                'n_samples': 99, #they did 100 in robust bregman clustering, but 99 is divisible by 3
+                'n_samples': 
                 'n_features': d,
                 'center_box': (1, 40),
                 'center_coordinates': np.array([[10]*d, [20]*d, [40]*d]),
@@ -253,12 +193,11 @@ if __name__ == "__main__":
             'convergence_threshold': 10
     }
 
-
     init_params_poisson = {
             'n_trials': 250,
             'bregman_dist': 'poisson',
             'data_params': {
-                'n_samples': 99, #they did 100 in robust bregman clustering, but 99 is divisible by 3
+                'n_samples': 99, 
                 'n_features': d,
                 'center_box': (1, 40),
                 'center_coordinates': np.array([[10]*d, [20]*d, [40]*d]),
@@ -273,7 +212,7 @@ if __name__ == "__main__":
             'n_trials': 250,
             'bregman_dist': 'gamma',
             'data_params': {
-                'n_samples': 99, #they did 100 in robust bregman clustering, but 99 is divisible by 3
+                'n_samples': 99, 
                 'n_features': 2,
                 'center_box': (1, 40), #they did 10,20,40 in robust bregman clustering: https://arxiv.org/pdf/1812.04356.pdf
                 'centers': 3,
@@ -285,9 +224,4 @@ if __name__ == "__main__":
             'convergence_threshold': 10
     }
 
-
-    #run_experiment_group(init_params, s_0s=[-3.0, -9.0], exp_dir='/home/adi/Duke/Clustering_Research/experiments_1227/')
-    # run_experiment_group(init_params_gaussian, s_0s=[-0.2, -1.0, -3.0, -9.0], exp_dir='/home/adi/Duke/Clustering_Research/experiments_0103/')
-    run_experiment_group(init_params_binomial, s_0s=[-0.2, -1.0, -3.0, -9.0], exp_dir='/home/adi/Duke/Clustering_Research/experiments_0103/')
-    # run_experiment_group(init_params_poisson, s_0s=[-0.2, -1.0, -3.0, -9.0], exp_dir='/home/adi/Duke/Clustering_Research/experiments_0103/')
-    # run_experiment_group(init_params_gamma, s_0s=[-0.2, -1.0, -3.0, -9.0], exp_dir='/home/adi/Duke/Clustering_Research/experiments_0103/')
+    run_experiment_group(init_params_binomial, s_0s=[-0.2, -1.0, -3.0, -9.0], exp_dir='exp_dir')
