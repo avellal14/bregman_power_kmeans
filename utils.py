@@ -17,24 +17,12 @@ def generate_points(random_state, **kwargs):
     (lo, hi) = kwargs['center_box']
 
     assert n % k == 0 #ensure that each cluster will have same number of points
-    #assert lo > 0 #binomial and poisson have support >= 0, exponential has mean (center) > 0
-
-    # if kwargs['data_dist'] == 'multinomial': #ensures n and p are valid for the binomial (n is approximate since it has to be integer)
-    #     assert kwargs['desired_variance'] < lo
-
+ 
     if 'center_coordinates' in kwargs.keys():
         assert kwargs['center_coordinates'].shape == (k,d)
-        #assert kwargs['center_coordinates'].shape[1] == d or kwargs['center_coordinates'].shape[1] == 1
         centers = kwargs['center_coordinates']
-
-        # if kawargs['center_coordinates'].shape[1] != d: #when d > 1 and centers in R^1, perform d independent samples for the coordinates
-        #     centers =
-        # else:
-        #     centers = kwargs['center_coordinates']
     else:
         centers = np.random.rand(k, d) * (hi - lo) + lo #generate centers uniformly from (lo, hi)^d
-
-    #centers = np.sort(centers, axis=0)
 
     #generate points
     X = np.zeros([n, d], dtype=np.float64)
@@ -242,7 +230,6 @@ def pairwise_distances(x, y=None):
         y_t = torch.transpose(x, 0, 1)
         y_norm = x_norm.view(1, -1)
 
-    #print("tyest: ", x.shape, y.shape, x_norm.shape, y_norm.shape)
     pairwise_distances = x_norm + y_norm - 2.0 * torch.mm(x, y_t)
     return torch.clamp(pairwise_distances, min=1e-12, max=1e6)
 
@@ -270,7 +257,7 @@ def powmean(m, s):
 
 #returns adjusted rand indices based on c1, c2, two n-dimensional vectors listing class membership
 def ARI(c1, c2):
-    return adjusted_rand_score(c1.numpy(), c2.numpy())   #(labels_true, labels_pred)
+    return adjusted_rand_score(c1.numpy(), c2.numpy()) 
 
 
 from math import log
@@ -318,8 +305,6 @@ def parallel_shuffle(a, b):
 
 ####################################################################################################################
 def visualize_lineplot(vals, times, line_names=None, x_axis_name=None, y_axis_name=None, colors=None, dpi=500, width_height_factors=[9, 6], save_path_list=None):
-    #times = np.concatenate([times, times, times, times, times], axis=1)
-    #line_names = line_names[0]
     assert (1 <= len(vals.shape) == len(times.shape) <= 2)
     assert (len(line_names) == 1)
 
